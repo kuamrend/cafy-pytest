@@ -240,16 +240,16 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "autofail(name): mark test to Fail when  this testcase has triggered autofail condition")
 
     if script_list:
-        script_name = script_list[0]
-        script_name = script_name.split('::')[0]
+        script_path = script_list[0]
+        script_path = script_path.split('::')[0]
         #If someone gives the script in the format
         #moduleName::className::testcaseName to execute only a specific testcase
         CafyLog.script_path = os.path.abspath(script_path)
         script_path = os.path.basename(script_path).replace('.py', '')
-        CafyLog.module_name = script_name
+        CafyLog.module_name = script_path
         _current_time = get_datentime()
         pid = os.getpid()
-        work_dir_name = "%s_%s_p%s" % (script_name,_current_time, pid )
+        work_dir_name = "%s_%s_p%s" % (script_path,_current_time, pid )
 
         if not config.option.reportdir:
             #If workdir option is set, execute the if block and if not given,
@@ -368,7 +368,7 @@ def pytest_configure(config):
         reg_dict = {}
         if cafykit_debug_enable: #If user wants to enable our cafy's debug
             os.environ['cafykit_debug_enable'] = 'True' # Set this environ variable to be used in session_finish()
-            params = {"test_suite":script_name, "test_id":0,
+            params = {"test_suite":script_path, "test_id":0,
                     "debug_server_name":CafyLog.debug_server}
             test_bed_file = CafyLog.topology_file
             input_file = CafyLog.test_input_file
@@ -636,6 +636,7 @@ class EmailReport(object):
         self.reg_dict = reg_dict
         self.log = CafyLog("cafy")
         self.errored_testcase_count = {}
+        self.analyzer_testcase = {}
         # using the first item of the script list for archive name as in most
         # cases it would be list with one element because we usally run pyest
         # with single test script
@@ -835,6 +836,8 @@ class EmailReport(object):
                                                                 %(arg, CafyLog._triggerFlags[arg]))
                     #pytest.fail("Failing this testcase automatically as this has triggered condition %s" % arg)
 
+
+
     def post_testcase_status(self, reg_id, test_case, debug_server):
         analyzer_status = False
         headers = {'content-type': 'application/json'}
@@ -842,7 +845,7 @@ class EmailReport(object):
         params = {"test_case": test_case,
                   "reg_id": reg_id,
                   "debug_server_name": debug_server}
-        for i in range(10):
+        for i in range(5):
             try:
                 analyzer_status = self.check_analyzer_status(params, headers)
                 if analyzer_status:
@@ -873,7 +876,6 @@ class EmailReport(object):
             except:
                 self.log.error("Http call to registration service url:%s is not successful" % url)
                 raise CafyException.CafyBaseException("Analyzer is failing")
-
 
 
     # pytest.hookimpl(tryfirst=True)
@@ -908,8 +910,12 @@ class EmailReport(object):
         if report.when == 'teardown':
             if self.reg_dict:
                 reg_id = self.reg_dict.get('reg_id')
-                analyzer_status = self.post_testcase_status(reg_id, testcase_name, CafyLog.debug_server)
-                self.log.info('Analyzer Status is {}'.format(analyzer_status))
+                test_class = report.nodeid.split('::')[1]
+                if  (test_class not in self.analyzer_testcase.keys()) or self.analyzer_testcase.get(test_class) == 1:
+                    analyzer_status = self.post_testcase_status(reg_id, testcase_name, CafyLog.debug_server)
+                    self.log.info('Analyzer Status is {}'.format(analyzer_status))
+                else:
+                    self.log.info('Analyzer is not invoked as testcase failed in setup')
             status = "unknown"
             if testcase_name in self.testcase_dict:
                 status = self.testcase_dict[testcase_name]
@@ -1060,6 +1066,11 @@ class EmailReport(object):
                 if self.reg_dict:
                     if hasattr(report, 'when'):
                         if report.when == 'setup':
+                            test_class = node.nodeid.split('::')[1]
+                            if test_class not in self.analyzer_testcase.keys():
+                                self.analyzer_testcase.update({test_class:1})
+                            else:
+                                self.analyzer_testcase[test_class] += 1
                             if node.cls not in self.errored_testcase_count:
                                 self.errored_testcase_count[node.cls] = 1
                             else:

@@ -244,9 +244,11 @@ def pytest_configure(config):
         script_path = script_path.split('::')[0]
         #If someone gives the script in the format
         #moduleName::className::testcaseName to execute only a specific testcase
+
         CafyLog.script_path = os.path.abspath(script_path)
         script_path = os.path.basename(script_path).replace('.py', '')
         CafyLog.module_name = script_path
+
         _current_time = get_datentime()
         pid = os.getpid()
         work_dir_name = "%s_%s_p%s" % (script_path,_current_time, pid )
@@ -381,9 +383,17 @@ def pytest_configure(config):
                 print("debug_server name not provided in topo file")
             else:
                 try:
-                    url = 'http://{0}:5001/create/'.format(CafyLog.debug_server)
-                    log.info("Calling Registration service to register the test execution (url:%s)" %url)
-                    response = requests.post(url, files=files, data=params, timeout = 300)
+                    if os.environment.get("Token") is not None:
+                        url = 'https://{0}:5001/create/'.format(CafyLog.debug_server)
+                        headers = {'Content-Type': 'application/json',
+                                   'Authorization': 'Bearer {}'.format(os.environment.get("Token"))}
+                        log.info("Calling Registration service to register the test execution (url:%s)" % url)
+                        response = requests.post(url, files=files, data=params, headers=headers, timeout=300)
+                    else:
+                        url = 'http://{0}:5001/create/'.format(CafyLog.debug_server)
+                        log.info("Calling Registration service to register the test execution (url:%s)" % url)
+                        response = requests.post(url, files=files, data=params, timeout=300)
+
                     if response.status_code == 200:
                         #reg_dict will contain testbed, input, debug files and reg_id
                         reg_dict = response.text # This reg_dict is a string of dict
@@ -786,9 +796,17 @@ class EmailReport(object):
             self.log.info("debug_server name not provided in topo file")
         else:
             try:
-                url = "http://{0}:5001/initiate_analyzer/".format(CafyLog.debug_server)
-                self.log.info("Calling registration service (url:%s) to initialize analyzer" % url)
-                response = requests.post(url, data=params)
+                if os.environment.get("Token") is not None:
+                    url = "https://{0}:5001/initiate_analyzer/".format(CafyLog.debug_server)
+                    headers = {'Content-Type': 'application/json',
+                               'Authorization': 'Bearer {}'.format(os.environment.get("Token"))}
+                    self.log.info("Calling registration service (url:%s) to initialize analyzer" % url)
+                    response = requests.post(url, data=params, headers=headers)
+                else:
+                    url = "https://{0}:5001/initiate_analyzer/".format(CafyLog.debug_server)
+                    lself.log.info("Calling registration service (url:%s) to initialize analyzer" % url)
+                    response = requests.post(url, data=params)
+
                 if response.status_code == 200:
                     self.log.info("Analyzer initialized")
                     return True
@@ -865,9 +883,17 @@ class EmailReport(object):
             self.log.info("debug_server name not provided in topo file")
         else:
             try:
-                url = "http://{0}:5001/end_test_case/".format(CafyLog.debug_server)
-                self.log.info("Calling registration service (url:%s) to check analyzer status" % url)
-                response = requests.get(url, data=params)
+                if os.environment.get("TOKEN") is not None:
+                    url = "https://{0}:5001/end_test_case/".format(CafyLog.debug_server)
+                    headers = {'Content-Type': 'application/json',
+                               'Authorization': 'Bearer {}'.format(os.environment.get("TOKEN"))}
+                    self.log.info("Calling registration service (url:%s) to initialize analyzer" % url)
+                    response = requests.post(url, data=params, headers=headers)
+                else:
+                    url = "http://{0}:5001/end_test_case/".format(CafyLog.debug_server)
+                    self.log.info("Calling registration service (url:%s) to initialize analyzer" % url)
+                    response = requests.post(url, data=params)
+
                 if response.status_code == 200:
                     return response.json()['analyzer_status']
                 else:
@@ -895,7 +921,13 @@ class EmailReport(object):
                     self.log.error("debug_server name not provided in topo file")
                 else:
                     try:
-                        url = 'http://{0}:5001/registertest/'.format(CafyLog.debug_server)
+                        if os.environment.get("TOKEN") is not None:
+                            url = 'https://{0}:5001/registertest/'.format(CafyLog.debug_server)
+                            headers = {'Content-Type': 'application/json',
+                                       'Authorization': 'Bearer {}'.format(os.environment.get("TOKEN"))}
+                        else:
+                            url = 'http://{0}:5001/registertest/'.format(CafyLog.debug_server)
+
                         self.log.info("Calling registration service to start handshake(url:%s" % url)
                         response = requests.post(url, json=params, headers=headers)
                         if response.status_code == 200:
@@ -1266,7 +1298,12 @@ class EmailReport(object):
             self.log.info("debug_server name not provided in topo file")
         else:
             try:
-                url = "http://{0}:5001/startdebug/".format(CafyLog.debug_server)
+                if os.environment.get("TOKEN") is not None:
+                    url = "https://{0}:5001/startdebug/".format(CafyLog.debug_server)
+                    headers['Authorization'] = 'Bearer {}'.format(os.environment.get("TOKEN"))
+                else:
+                    url = "http://{0}:5001/startdebug/".format(CafyLog.debug_server)
+
                 self.log.info("Calling registration service (url:%s) to start collecting" % url)
                 response = requests.post(url, json=params, headers=headers)
                 if response.status_code == 200:
@@ -1283,7 +1320,13 @@ class EmailReport(object):
             self.log.info("debug_server name not provided in topo file")
         else:
             try:
-                url = "http://{0}:5003/startrootcause/".format(CafyLog.debug_server)
+                if os.environment.get("TOKEN") is not None:
+                    url = "https://{0}:5003/startrootcause/".format(CafyLog.debug_server)
+                    headers['Authorization'] = 'Bearer {}'.format(os.environment.get("TOKEN"))
+                else:
+                    url = "http://{0}:5003/startrootcause/".format(CafyLog.debug_server)
+
+
                 self.log.info("Calling RC engine to start rootcause (url:%s)" % url)
                 response = requests.post(url, json=params, headers=headers)
                 if response.status_code == 200:
@@ -1385,9 +1428,18 @@ class EmailReport(object):
     def _get_analyzer_log(self):
         params = {"reg_id": CafyLog.registration_id,
                   "debug_server_name": CafyLog.debug_server}
-        url = 'http://{0}:5001/get_analyzer_log/'.format(CafyLog.debug_server)
+
+
         try:
-            response = requests.get(url, data=params)
+            if os.environment.get("TOKEN") is not None:
+                url = 'https://{0}:5001/get_analyzer_log/'.format(CafyLog.debug_server)
+                headers = {'Content-Type': 'application/json',
+                           'Authorization': 'Bearer {}'.format(os.environment.get("TOKEN"))}
+                response = requests.get(url, data=params, headers=headers)
+            else:
+                url = 'http://{0}:5001/get_analyzer_log/'.format(CafyLog.debug_server)
+                response = requests.get(url, data=params)
+
             if response is not None and response.status_code == 200:
                 if response.text:
                     if 'Content-Disposition' in response.headers:
@@ -1416,8 +1468,12 @@ class EmailReport(object):
                       "input_file": CafyLog.test_input_file}
             headers = {'content-type': 'application/json'}
             try:
-                url = 'http://{0}:5001/uploadcollectorlogfile/'.format(CafyLog.debug_server)
-                print("url = ", url)
+                if os.environment.get("TOKEN") is not None:
+                    url = 'https://{0}:5001/uploadcollectorlogfile/'.format(CafyLog.debug_server)
+                    headers['Authorization'] = 'Bearer {}'.format(os.environment.get("TOKEN"))
+                else:
+                    url = 'http://{0}:5001/uploadcollectorlogfile/'.format(CafyLog.debug_server)
+
                 self.log.info("Calling registration upload collector logfile service (url:%s)" %url)
                 response = requests.post(url, json=params, headers=headers)
                 if response is not None and response.status_code == 200:
@@ -1435,7 +1491,12 @@ class EmailReport(object):
                         else:
                             self.log.info("No collector log file received")
 
-                url = 'http://{0}:5001/deleteuploadedfiles/'.format(CafyLog.debug_server)
+                if os.environment.get("TOKEN") is not None:
+                    url = 'https://{0}:5001/deleteuploadedfiles/'.format(CafyLog.debug_server)
+                    headers['Authorization'] = 'Bearer {}'.format(os.environment.get("TOKEN"))
+                else:
+                    url = 'http://{0}:5001/deleteuploadedfiles/'.format(CafyLog.debug_server)
+
                 self.log.info("Calling registration delete upload file service (url:%s)" % url)
                 response = requests.post(url, json=params, headers=headers)
                 if response.status_code == 200:

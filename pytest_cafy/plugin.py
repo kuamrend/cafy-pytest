@@ -368,7 +368,7 @@ def pytest_configure(config):
         reg_dict = {}
         if cafykit_debug_enable: #If user wants to enable our cafy's debug
             os.environ['cafykit_debug_enable'] = 'True' # Set this environ variable to be used in session_finish()
-            params = {"test_suite":script_name, "test_id":0,
+            params = {"test_suite":script_path, "test_id":0,
                     "debug_server_name":CafyLog.debug_server}
             test_bed_file = CafyLog.topology_file
             input_file = CafyLog.test_input_file

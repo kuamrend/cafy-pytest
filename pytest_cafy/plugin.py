@@ -1421,7 +1421,7 @@ class EmailReport(object):
             self.log.info('No Analyzer log file receiver')
 
 
-    @pytest.hookimpl(tryfirst=True)
+    @pytest.hookimpl(trylast=True)
     def pytest_sessionfinish(self):
         test_data_file = os.path.join(CafyLog.work_dir, "testdata.json")
         self.log.info("Test data generated at %s" % test_data_file)
@@ -1468,7 +1468,6 @@ class EmailReport(object):
                     f.write(json.dumps(self.log.buffer_to_retest))
             except Exception as error:
                 self.log.info(error)
-
 
         # Check if using allure1 : This is by checking if xml file is generated in ARCHIVE
         ARCHIVE = os.environ.get('ARCHIVE')

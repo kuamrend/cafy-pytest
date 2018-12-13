@@ -1468,6 +1468,89 @@ class EmailReport(object):
                     f.write(json.dumps(self.log.buffer_to_retest))
             except Exception as error:
                 self.log.info(error)
+
+
+        # Check if using allure1 : This is by checking if xml file is generated in ARCHIVE
+        ARCHIVE = os.environ.get('ARCHIVE')
+        files = [os.path.join(ARCHIVE, f)
+                 for f in os.listdir(ARCHIVE) if '-testsuite.xml' in f]
+        if files:
+            self.log.info("allure1 is being used")
+            print('\nxmlfile_link : ')
+            for f in files:
+                print(f)
+            print('\n')
+
+            # If no-allure option is not given, which means you want to
+            # generate allure report
+            if os.environ.get('NOALLURE') != 'True':
+                # If xml file is created, then generate html report
+                if files:
+                    allure_path = '/auto/cafy/cafykit/allure/bin/allure'
+                    if os.path.exists(allure_path):
+                        # This cmd generates html file named index.html from xml
+                        cmd = allure_path + ' report generate ' + ARCHIVE + ' -o ' + ARCHIVE
+                    else:
+                        # Assuming the code is not being ran from /ws or /auto, instead
+                        # it could be the local machine, so you need to install allure cli.
+                        # and Java 7+ version. We assume,its already installed
+                        # This cmd generates html file named index.html from xml
+                        cmd = 'allure generate ' + ARCHIVE + ' -o ' + ARCHIVE
+                    print('Generating combined allure report using: \n{}'.format(cmd))
+                    os.system(cmd)
+                    generated_html_filename = 'index.html'
+                    path = CAFY_REPO
+                    file_link = os.path.join(
+                        os.path.sep, ARCHIVE, generated_html_filename)
+                    if os.path.isfile(file_link):
+                        if path.startswith(('/auto', '/ws')):
+                            html_link = '/'.join(['http://allure.cisco.com', file_link])
+                        else:
+                            html_link = '/'.join(['file:///', file_link])
+                        print('html_link :')
+                        print(html_link)
+                        CafyLog.htmlfile_link = file_link
+                    else:
+                        print('\n Allure html report not generated')
+
+                else:
+                    print('\n Allure XML file not created')
+
+        else:
+            files = [os.path.join(ARCHIVE, f)
+                    for f in os.listdir(ARCHIVE) if '.json' in f]
+            if files:
+                self.log.info("allure2 is being used")
+                allure_path = '/auto/cafy/cafykit/allure2/bin/allure'
+                if os.path.exists(allure_path):
+                    # This cmd generates html file named index.html from json in ARCHIVE/allure-report
+                    allure_report_html_dir = os.path.join(ARCHIVE, 'allure-report' )
+                    cmd = allure_path + ' generate ' + ARCHIVE + ' -o ' + allure_report_html_dir
+                else:
+                    # Assuming the code is not being ran from /ws or /auto, instead
+                    # it could be the local machine, so you need to install allure cli.
+                    # and Java 8+ version. We assume,its already installed
+                    # This cmd generates html file named index.html from json
+                    cmd = 'allure generate ' + ARCHIVE + ' -o ' + allure_report_html_dir
+                print('Generating combined allure report using: \n{}'.format(cmd))
+                os.system(cmd)
+                generated_html_filename = 'index.html'
+                file_link = os.path.join(
+                    os.path.sep, allure_report_html_dir, generated_html_filename)
+                if os.path.isfile(file_link):
+                    path = CAFY_REPO
+                    if path.startswith(('/auto', '/ws')):
+                        html_link = '/'.join(['http://allure.cisco.com', file_link])
+                    else:
+                        html_link = '/'.join(['file:///', file_link])
+                    print('html_link :')
+                    print(html_link)
+                    CafyLog.htmlfile_link = file_link
+                else:
+                    print('\n Allure2 html report not generated')
+
+
+
         '''
         line_regex = re.compile(r"\-\w*\-{1,}\-\d{4}\-\d{2}\-\d{2}T\d*\-\d*\-\d*\[([\w\-:]*)\](\[.*\])?>")
         log_filename = os.path.join(CafyLog.work_dir, 'all.log')

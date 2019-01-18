@@ -534,7 +534,7 @@ def pytest_collection_modifyitems(session, config, items):
                 log.info("url: {}".format(url))
                 log.info("Calling API service for live logging of reg_id ")
                 params = {"reg_id": CafyLog.registration_id}
-                response = requests.patch(url, json=params, headers=headers)
+                response = requests.patch(url, json=params, headers=headers, timeout=60)
                 if response.status_code == 200:
                     log.info("Calling API service for live logging of reg_id successful")
                 else:
@@ -558,7 +558,7 @@ def pytest_collection_modifyitems(session, config, items):
             url = '{0}/api/runs/{1}/cases'.format(os.environ.get('CAFY_API_HOST'), os.environ.get('CAFY_RUN_ID'))
             log.info("url: {}".format(url))
             log.info("Calling API service for live logging of collected testcases ")
-            response = requests.post(url, json=CafyLog.collected_testcases, headers=headers)
+            response = requests.post(url, json=CafyLog.collected_testcases, headers=headers, timeout=60)
             if response.status_code == 200:
                 log.info("Calling API service for live logging of collected testcases successful")
             else:
@@ -968,7 +968,7 @@ class EmailReport(object):
                     self.log.info("url: {}".format(url))
                     self.log.info("Calling API service for live logging of executed testcases ")
                     self.log.info("json = {0}".format(CafyLog.collected_testcases))
-                    response = requests.post(url, json=CafyLog.collected_testcases, headers=headers)
+                    response = requests.post(url, json=CafyLog.collected_testcases, headers=headers, timeout=60)
                     if response.status_code == 200:
                         self.log.info("Calling API service for live logging of executed testcase successful")
                     else:

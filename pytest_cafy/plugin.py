@@ -671,7 +671,8 @@ class EmailReport(object):
 
         msg['Subject'] = ("Cafy Report @%s" % CafyLog.work_dir)
         msg['From'] = self.email_from
-        mail_to = COMMASPACE.join(self.email_addr_list)
+        mail_to = self.email_addr_list
+        #mail_to = COMMASPACE.join(self.email_addr_list)
         msg['To'] = mail_to
         msg.add_header('Content-Type', 'text/html')
         # fixme: add an option to read config from file rather then CLI

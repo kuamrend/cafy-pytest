@@ -1382,7 +1382,7 @@ class EmailReport(object):
                 if processed_log_line:
                     log_grouping.append_log_line(LogLine(html.escape(processed_log_line.group(2)), processed_log_line.group(1).upper()))
         return all_log_groupings
-
+    
     def _generate_all_star_log_html(self):
         log_file_name = os.path.join(CafyLog.work_dir, "all.log")
         try:

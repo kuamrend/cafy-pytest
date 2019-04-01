@@ -1029,7 +1029,6 @@ class EmailReport(object):
 
     @pytest.hookimpl(hookwrapper=True, trylast=True)
     def pytest_runtest_makereport(self, item, call):
-        print("in cafy plugin makereport")
         outcome = (yield)
         if call.when =='call':
             report = outcome.get_result()

@@ -1041,7 +1041,9 @@ class EmailReport(object):
                     self.log.info('Analyzer Status is {}'.format(analyzer_status))
                 else:
                     self.log.info('Analyzer is not invoked as testcase failed in setup')
-                failures = json.loads(analyzer_status['failures'])
+                if isinstance(analyzer_status, bool):
+                    return
+                failures = json.loads(analyzer_status.get('failures',[]))
                 if len(failures):
                     self.log.error('Test case failed due to crash/traceback {}'.format(pformat(failures)))
                     test_outcome = 'failed'

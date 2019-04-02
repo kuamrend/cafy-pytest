@@ -21,11 +21,12 @@ import yaml
 import pytest
 
 from _pytest.terminal import TerminalReporter
-from _pytest.runner import runtestprotocol
+from _pytest.runner import runtestprotocol, TestReport
 from _pytest.mark import MarkInfo
 
 from enum import Enum
 from tabulate import tabulate
+from pprint import pprint, pformat
 from shutil import copyfile
 from configparser import ConfigParser
 from datetime import datetime
@@ -813,7 +814,7 @@ class EmailReport(object):
             self.log.set_testcase("Teardown")
         else:
             testcase_name = self.get_test_name(nextitem.nodeid)
-            self.log.set_testcase(testcase_name)
+            # self.log.set_testcase(testcase_name)
         testcase_name = self.get_test_name(item.nodeid)
         self.log.info('Teardown module for testcase {}'.format(testcase_name))
 
@@ -905,14 +906,6 @@ class EmailReport(object):
 
 
         if report.when == 'teardown':
-            if self.reg_dict:
-                reg_id = self.reg_dict.get('reg_id')
-                test_class = report.nodeid.split('::')[1]
-                if (test_class not in self.analyzer_testcase.keys()) or self.analyzer_testcase.get(test_class) == 1:
-                    analyzer_status = self.post_testcase_status(reg_id, testcase_name, CafyLog.debug_server)
-                    self.log.info('Analyzer Status is {}'.format(analyzer_status))
-                else:
-                    self.log.info('Analyzer is not invoked as testcase failed in setup')
             status = "unknown"
             if testcase_name in self.testcase_dict:
                 status = self.testcase_dict[testcase_name]
@@ -1033,6 +1026,38 @@ class EmailReport(object):
                         self.testcase_failtrace_dict[testcase_name] = report.longrepr
                     else:
                         self.testcase_failtrace_dict[testcase_name] = None
+
+    @pytest.hookimpl(hookwrapper=True, trylast=True)
+    def pytest_runtest_makereport(self, item, call):
+        outcome = (yield)
+        if call.when =='call':
+            report = outcome.get_result()
+            testcase_name = self.get_test_name(report.nodeid)
+            if self.reg_dict:
+                reg_id = self.reg_dict.get('reg_id')
+                test_class = report.nodeid.split('::')[1]
+                if (test_class not in self.analyzer_testcase.keys()) or self.analyzer_testcase.get(test_class) == 1:
+                    analyzer_status = self.post_testcase_status(reg_id, testcase_name, CafyLog.debug_server)
+                    self.log.info('Analyzer Status is {}'.format(analyzer_status))
+                else:
+                    self.log.info('Analyzer is not invoked as testcase failed in setup')
+                if isinstance(analyzer_status, bool):
+                    return
+                failures = json.loads(analyzer_status.get('failures',[]))
+                if len(failures):
+                    self.log.error('Test case failed due to crash/traceback {}'.format(pformat(failures)))
+                    test_outcome = 'failed'
+                    report = TestReport(
+                        report.nodeid,
+                        report.location,
+                        report.keywords,
+                        test_outcome,
+                        report.longrepr,
+                        report.when,
+                        report.sections,
+                        report.duration,
+                    )
+                    outcome.force_result(report)
 
 
     def check_call_report(self, item, nextitem):

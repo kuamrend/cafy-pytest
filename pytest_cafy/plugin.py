@@ -1438,12 +1438,19 @@ class EmailReport(object):
                 response = requests.post(url, json=params, headers=headers)
                 if response is not None and response.status_code == 200:
                     if response.text:
+                        summary_log = response.text
+                        if '+'*120 in response.text:
+                            summary_log, verbose_log = response.text.split('+'*120)
                         self.log.info ("Debug Collector logs: %s" %(response.text))
                         if 'Content-Disposition' in response.headers:
                             debug_collector_log_filename = response.headers['Content-Disposition'].split('filename=')[-1]
                             collector_log_file_full_path = os.path.join(CafyLog.work_dir,debug_collector_log_filename)
                             with open(collector_log_file_full_path, 'w') as f:
-                                f.write(response.text)
+                                f.write(summary_log)
+                            verbose_log_file_path = collector_log_file_full_path.replace("debug_collection.log",
+                                                                                         "verbose_collection.log")
+                            with open(verbose_log_file_path, 'w') as f:
+                                f.write(verbose_log)
                             try:
                                 DebugLibrary.convert_collector_logs_to_json(collector_log_file_full_path)
                             except:

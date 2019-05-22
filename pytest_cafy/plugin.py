@@ -1027,6 +1027,15 @@ class EmailReport(object):
                     else:
                         self.testcase_failtrace_dict[testcase_name] = None
 
+        # Add the testcase status to testcase_dict as error if the test failed in setup
+        try:
+            if report.when == 'setup' and report.outcome == 'failed':
+                testcase_name = self.get_test_name(report.nodeid)
+                self.testcase_dict[testcase_name] = 'error'
+        except Exception as e:
+            self.log.error("Error getting the testcase status for setup failure: {}".format(e))
+
+
     @pytest.hookimpl(hookwrapper=True, trylast=True)
     def pytest_runtest_makereport(self, item, call):
         outcome = (yield)

@@ -4,7 +4,7 @@
 
 <h3>Detailed Results</h3>
 <p>
-  <span class="badge">&nbsp;&#128336; {{report.run_time}}&nbsp;</span>&nbsp;
+    <span class="badge">&nbsp;&#128336; {{report.run_time}}&nbsp;</span>&nbsp;
     <!--[if mso]>
     <a style="font-size: 14px;" href="{{report.htmlprefix}}{{report.allure_report}}">View allure report &gt;</a>
     <![endif]-->
@@ -24,24 +24,41 @@
 
 {% macro detailed_data(report) -%}
 {% for name, status in report.testcase_dict.items() %}
-  <tr>
-    <td><left>{{name}}</left></td>
-    <td class={{status}}><left>{{status}}</left></td>
-    <td class="fail-log"><left>{{report.testcase_failtrace_dict[name]}}</left></td>
-  </tr>
+<tr>
+    <td>
+        <left>{{name}}</left>
+    </td>
+    <td class={{status}}>
+        <left>{{status}}</left>
+    </td>
+    <td class="fail-log">
+        <left>{{report.testcase_failtrace_dict[name]}}</left>
+    </td>
+</tr>
 {% endfor %}
 {%- endmacro %}
 
 
-
 {% macro summary(report) -%}
 <tr>
-  <td><center>{{report.passed}}</center></td>
-  <td><center>{{report.xpassed}}</center></td>
-  <td><center>{{report.failed}}</center></td>
-  <td><center>{{report.skipped}}</center></td>
-  <td><center>{{report.xfailed}}</center></td>
-  <th><center>{{report.total}}</center></th>
+    <td>
+        <center>{{report.passed}}</center>
+    </td>
+    <td>
+        <center>{{report.xpassed}}</center>
+    </td>
+    <td>
+        <center>{{report.failed}}</center>
+    </td>
+    <td>
+        <center>{{report.skipped}}</center>
+    </td>
+    <td>
+        <center>{{report.xfailed}}</center>
+    </td>
+    <th>
+        <center>{{report.total}}</center>
+    </th>
 </tr>
 {%- endmacro %}
 
@@ -50,171 +67,152 @@
 <html lang="en">
 <head>
     <title>{{report.title}}</title>
-    <style>{{styles}}</style>
+    <style>{
+    {
+        styles
+    }
+    }</style>
 </head>
 <body>
-  <div class="container">
+<div class="container">
     <h2>{{report.script_list}}</h2>
     <hr>
-
-      <!-- Run Info -->
-
-    <h3>Run Info</h3>
-    <table class="table table-bordered">
-      <col width="30%">
-      <tbody>
-      <tr>
-        <td>TestBed</td>
-        <td>{{report.testbed}}</td>
-      </tr>
-      <tr>
-        <td>Registration ID</td>
-        <td>{{report.registration_id}}</td>
-      </tr>
-      <tr>
-        <td>Submitter</td>
-        <td>{{report.submitter}}</td>
-      </tr>
-       <tr>
-        <td>Run directory</td>
-        <td>{{report.run_dir}}</td>
-      </tr>
-    </tr>
-     <tr>
-      <td>Git commit id</td>
-      <td>{{report.git_commit_id}}</td>
-    </tr>
-      </tr>
-       <tr>
-        <td>Script list</td>
-        <td>{{report.script_list}}</td>
-      </tr>
-      <tr>
-        <td>Start time</td>
-        <td>{{report.start_time}}</td>
-      </tr>
-      <tr>
-        <td>Stop time</td>
-        <td>{{report.stop_time}}</td>
-      </tr>
-      <tr>
-        <td>Run time</td>
-        <td>{{report.run_time}}</td>
-      </tr>
-      {% if report.debug_dirs %}
-      <tr>
-        <td>Debug directories</td>
-        <td>
-          <ul>
-          {% for debug_dir in report.debug_dirs %}
-            <li>{{debug_dir}}</li>
-          {% endfor %}
-          </ul>
-        </td>
-      {% endif %}
-      </tr>
-          <tr>
-            <td>Cafy repo</td>
-            <td>{{report.cafy_repo}}</td>
-          </tr>
-      </tr>
-      <tr>
-        <td>Exec host</td>
-        <td>{{report.exec_host}}</td>
-      </tr>
-      <tr>
-        <td>Python version</td>
-        <td>{{report.python_version}}</td>
-      </tr>
-      <tr>
-        <td>Exec platform</td>
-        <td>{{report.platform}}</td>
-      </tr>
-      <tr>
-        <td>Topology file</td>
-        <td>{{report.topo_file}}</td>
-      </tr>
-      <tr>
-        <td>Archive</td>
-        <td>{{report.archive}}</td>
-      </tr>
-      <tr>
-        <td>Allure report link</td>
-        <td><a href="{{report.htmlprefix}}{{report.allure_report}}">{{report.htmlprefix}}{{report.allure_report}}</a></td>
-      </tr>
-      </tbody>
-    </table>
 
     <!-- Summary -->
     <h3>Summary</h3>
     <table class="table table-bordered">
-      <thead>
+        <thead>
         <tr>
-          <th><center>Passed</center></th>
-          <th><center>Xpassed</center></th>
-          <th><center>Failed</center></th>
-          <th><center>Skipped</center></th>
-          <th><center>Xfailed</center></th>
-          <th><center>Total</center></th>
+            <th>
+                <center>Passed</center>
+            </th>
+            <th>
+                <center>Xpassed</center>
+            </th>
+            <th>
+                <center>Failed</center>
+            </th>
+            <th>
+                <center>Skipped</center>
+            </th>
+            <th>
+                <center>Xfailed</center>
+            </th>
+            <th>
+                <center>Total</center>
+            </th>
         </tr>
-      </thead>
-      <tbody>
+        </thead>
+        <tbody>
         {{ summary(report) }}
-      </tbody>
+        </tbody>
     </table>
+    <!-- Run Info -->
+
+    <h3>Run Info</h3>
+    <table class="table table-bordered">
+        <col width="30%">
+        <tbody>
+        {% if report.testbed %}
+        <tr>
+            <td>TestBed</td>
+            <td>{{report.testbed}}</td>
+        </tr>
+        {% endif %}
+        {% if report.registration_id %}
+        <tr>
+            <td>Registration ID</td>
+            <td>{{report.registration_id}}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td>Submitter</td>
+            <td>{{report.submitter}}</td>
+        </tr>
+        <tr>
+            <td>Run directory</td>
+            <td>{{report.run_dir}}</td>
+        </tr>
+        {% if report.git_commit_id %}
+        <tr>
+            <td>Git commit id</td>
+            <td>{{report.git_commit_id}}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td>Script list</td>
+            <td>{{report.script_list}}</td>
+        </tr>
+        <tr>
+            <td>Start time</td>
+            <td>{{report.start_time}}</td>
+        </tr>
+        <tr>
+            <td>Stop time</td>
+            <td>{{report.stop_time}}</td>
+        </tr>
+        <tr>
+            <td>Run time</td>
+            <td>{{report.run_time}}</td>
+        </tr>
+        {% if report.debug_dirs %}
+        <tr>
+            <td>Debug directories</td>
+            <td>
+                <ul>
+                    {% for debug_dir in report.debug_dirs %}
+                    <li>{{debug_dir}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            {% endif %}
+        </tr>
+        <tr>
+            <td>Cafy repo</td>
+            <td>{{report.cafy_repo}}</td>
+        </tr>
+        <tr>
+            <td>Exec host</td>
+            <td>{{report.exec_host}}</td>
+        </tr>
+        <tr>
+            <td>Topology file</td>
+            <td>{{report.topo_file}}</td>
+        </tr>
+        <tr>
+            <td>Archive</td>
+            <td>{{report.archive}}</td>
+        </tr>
+        <tr>
+            <td>Allure report link</td>
+            <td>
+                <a href="{{report.htmlprefix}}{{report.allure_report}}">{{report.htmlprefix}}{{report.allure_report}}</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
 
     <!-- Testcase Status Summary -->
     <h3>Testcase Status Summary</h3>
     <table class="table table-bordered">
-      <thead>
+        <thead>
         <tr>
-          <th><left>Testcase Name</left></th>
-          <th><left>Result</left></th>
-          <th><left>Fail Log</left></th>
+            <th>
+                <left>Testcase Name</left>
+            </th>
+            <th>
+                <left>Result</left>
+            </th>
+            <th>
+                <left>Fail Log</left>
+            </th>
         </tr>
-      </thead>
-      <tbody>
-        {{ detailed_data(report) }}
-      </tbody>
-    </table>
-
-    <!-- Build Info -->
-
-    <h3>Build Info</h3>
-      <p style="line-height:1.8em; word-wrap:break-word; font-size:13px">
-      <span class="badge">Image</span>
-      &nbsp;{{report.image}}</p>
-    <table class="table table-bordered">
-        <col width="30%">
+        </thead>
         <tbody>
-          <tr>
-            <td>XR EFR</td>
-            <td>{{report.xr_efr}}</td>
-          </tr>
-          <tr>
-            <td>XR workspace</td>
-            <td>{{report.xr_ws}}</td>
-          </tr>
-          <tr>
-            <td>Calvados EFR</td>
-            <td>{{report.cal_efr}}</td>
-          </tr>
-          <tr>
-            <td>Calvados workspace</td>
-            <td>{{report.cal_ws}}</td>
-          </tr>
-          {% if report.jenkins_url %}
-          <tr>
-            <td>Jenkins URL</td>
-            <td><a href="{{report.jenkins_url}}">{{report.jenkins_url}}</a></td>
-          </tr>
-          {% endif %}
+        {{ detailed_data(report) }}
         </tbody>
     </table>
-
-    <!-- Detailed Report -->
-
-	{{ detailed_header(report) }}
-
+</div>
 </body>
 </html>

@@ -1579,7 +1579,7 @@ class CafyReportData(object):
         self.topo_file = topo_file
         self.run_dir = self.terminalreporter.startdir.strpath
         try:
-            self.git_commit_id = subprocess.check_output(['git', 'rev-parse', 'origin/master']).decode("utf-8").replace('\n', '')
+            self.git_commit_id = subprocess.check_output(['git', 'rev-parse', 'origin/master'], timeout=5).decode("utf-8").replace('\n', '')
         except Exception:
             self.git_commit_id = None
         self.archive = CafyLog.work_dir

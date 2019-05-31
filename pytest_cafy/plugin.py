@@ -1571,7 +1571,11 @@ class CafyReportData(object):
         # Run Info
         self.exec_host = platform.node()
         self.python_version = platform.python_version()
-        self. platform = platform.platform()
+        self.platform = platform.platform()
+        try:
+            self.cafykit_release = os.path.basename(os.environ.get("VIRTUAL_ENV"))
+        except:
+            self.cafykit_release = None
         self.testbed = None
         self.registration_id = CafyLog.registration_id
         self.submitter = EmailReport.USER

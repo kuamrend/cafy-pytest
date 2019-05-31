@@ -139,6 +139,12 @@
             <td>{{report.git_commit_id}}</td>
         </tr>
         {% endif %}
+        {% if report.cafykit_release %}
+        <tr>
+            <td>Cafykit Release</td>
+            <td>{{report.cafykit_release}}</td>
+        </tr>
+        {% endif %}
         <tr>
             <td>Script list</td>
             <td>{{report.script_list}}</td>

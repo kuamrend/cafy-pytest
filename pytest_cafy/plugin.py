@@ -123,7 +123,7 @@ def pytest_addoption(parser):
     group.addoption('--work-dir', dest="workdir", metavar="DIR", default=None,
                     help="Path for work dir")
 
-    group.addoption('--report-dir', dest="reportdir",
+    group.addoption('-R','--report-dir', dest="reportdir",
                     metavar="DIR",
                     default=None,
                     help="Path for report dir")
@@ -134,7 +134,7 @@ def pytest_addoption(parser):
                     type=lambda x: is_valid_param(x, file_type='topology_file'),
                     help='Filename of your testbed')
 
-    group.addoption('--test-input-file', action='store', dest='test_input_file',
+    group.addoption('-I', '--test-input-file', action='store', dest='test_input_file',
                     metavar='test_input_file',
                     type=lambda x: is_valid_param(x, file_type='input_file'),
                     help='Filename of your test input file')

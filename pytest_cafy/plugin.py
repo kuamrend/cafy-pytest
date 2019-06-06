@@ -1441,7 +1441,7 @@ class EmailReport(object):
                         summary_log = response.text
                         if '+'*120 in response.text:
                             summary_log, verbose_log = response.text.split('+'*120)
-                        self.log.info ("Debug Collector logs: %s" %(response.text))
+                        self.log.info ("Debug Collector logs: %s" %(summary_log))
                         if 'Content-Disposition' in response.headers:
                             debug_collector_log_filename = response.headers['Content-Disposition'].split('filename=')[-1]
                             collector_log_file_full_path = os.path.join(CafyLog.work_dir,debug_collector_log_filename)

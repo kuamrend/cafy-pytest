@@ -12,6 +12,15 @@
 </tr>
 {%- endmacro %}
 
+{% macro detailed_data(report) -%}
+{% for name, status in report.testcase_dict.items() %}
+  <tr>
+    <td><left>{{name}}</left></td>
+    <td class={{status}}><left>{{status}}</left></td>
+    <td class="fail-log"><left>{{report.testcase_failtrace_dict[name]}}</left></td>
+  </tr>
+{% endfor %}
+{%- endmacro %}
 
 <!DOCTYPE html>
 <html lang="en">

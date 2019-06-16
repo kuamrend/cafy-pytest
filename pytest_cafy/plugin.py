@@ -1365,7 +1365,10 @@ class EmailReport(object):
                     copyfile(_junitxml_filename, junitxml_file_path)
                     os.chmod(junitxml_file_path, 0o775)
         if not self.no_email:
-            self._sendemail()
+            try:
+                self._sendemail()
+            except Exception as error:
+                self.log.error("Failed to send summary email:\n %s" % str(error))
             terminalreporter.write_line("\n TestCase Summary Status Table")
             temp_list = []
             for k,v in self.testcase_dict.items():

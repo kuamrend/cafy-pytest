@@ -1364,13 +1364,17 @@ class EmailReport(object):
                 if junitxml_file_path != _junitxml_filename:
                     copyfile(_junitxml_filename, junitxml_file_path)
                     os.chmod(junitxml_file_path, 0o775)
+
+        temp_list = []
+        terminalreporter.write_line("\n TestCase Summary Status Table")
+        for k,v in self.testcase_dict.items():
+            temp_list.append((k,v))
+        print (tabulate(temp_list, headers=['Testcase_name', 'Status'], tablefmt='grid'))
         if not self.no_email:
-            self._sendemail()
-            terminalreporter.write_line("\n TestCase Summary Status Table")
-            temp_list = []
-            for k,v in self.testcase_dict.items():
-                temp_list.append((k,v))
-            print (tabulate(temp_list, headers=['Testcase_name', 'Status'], tablefmt='grid'))
+            try: 
+                self._sendemail()
+            except Exception as err: 
+                self.log.error("Error when sending email: {err}".format(err=str(err)))
 
 
         #Unset environ variables cafykit_mongo_learn & cafykit_mongo_read if set

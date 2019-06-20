@@ -1374,7 +1374,7 @@ class EmailReport(object):
             try: 
                 self._sendemail()
             except Exception as err: 
-                log.error("Error when sending email: {err}".format(err=str(error)))
+                self.log.error("Error when sending email: {err}".format(err=str(err)))
 
 
         #Unset environ variables cafykit_mongo_learn & cafykit_mongo_read if set

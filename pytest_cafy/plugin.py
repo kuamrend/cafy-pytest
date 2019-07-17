@@ -790,7 +790,7 @@ class EmailReport(object):
             try:
                 url = "http://{0}:5001/initiate_analyzer/".format(CafyLog.debug_server)
                 self.log.info("Calling registration service (url:%s) to initialize analyzer" % url)
-                response = requests.post(url, data=params)
+                response = requests.post(url, data=params, timeout=300)
                 if response.status_code == 200:
                     self.log.info("Analyzer initialized")
                     return True
@@ -864,7 +864,7 @@ class EmailReport(object):
             try:
                 url = "http://{0}:5001/end_test_case/".format(CafyLog.debug_server)
                 self.log.info("Calling registration service (url:%s) to check analyzer status" % url)
-                response = requests.get(url, data=params)
+                response = requests.get(url, data=params, timeout=60)
                 if response.status_code == 200:
                     return response.json()['analyzer_status']
                 else:
@@ -895,7 +895,7 @@ class EmailReport(object):
                     try:
                         url = 'http://{0}:5001/registertest/'.format(CafyLog.debug_server)
                         self.log.info("Calling registration service to start handshake(url:%s" % url)
-                        response = requests.post(url, json=params, headers=headers)
+                        response = requests.post(url, json=params, headers=headers, timeout=300)
                         if response.status_code == 200:
                             self.log.info("Handshake part of registration service was successful")
                         else:
@@ -1318,7 +1318,7 @@ class EmailReport(object):
             try:
                 url = "http://{0}:5001/startdebug/".format(CafyLog.debug_server)
                 self.log.info("Calling registration service (url:%s) to start collecting" % url)
-                response = requests.post(url, json=params, headers=headers)
+                response = requests.post(url, json=params, headers=headers, timeout=1500)
                 if response.status_code == 200:
                     return response
                 else:
@@ -1335,7 +1335,7 @@ class EmailReport(object):
             try:
                 url = "http://{0}:5003/startrootcause/".format(CafyLog.debug_server)
                 self.log.info("Calling RC engine to start rootcause (url:%s)" % url)
-                response = requests.post(url, json=params, headers=headers)
+                response = requests.post(url, json=params, headers=headers, timeout=300)
                 if response.status_code == 200:
                     return response
                 else:
@@ -1441,7 +1441,7 @@ class EmailReport(object):
                   "debug_server_name": CafyLog.debug_server}
         url = 'http://{0}:5001/get_analyzer_log/'.format(CafyLog.debug_server)
         try:
-            response = requests.get(url, data=params)
+            response = requests.get(url, data=params, timeout=300)
             if response is not None and response.status_code == 200:
                 if response.text:
                     if 'Content-Disposition' in response.headers:
@@ -1473,7 +1473,7 @@ class EmailReport(object):
                 url = 'http://{0}:5001/uploadcollectorlogfile/'.format(CafyLog.debug_server)
                 print("url = ", url)
                 self.log.info("Calling registration upload collector logfile service (url:%s)" %url)
-                response = requests.post(url, json=params, headers=headers)
+                response = requests.post(url, json=params, headers=headers, timeout=300)
                 if response is not None and response.status_code == 200:
                     if response.text:
                         summary_log = response.text
@@ -1498,7 +1498,7 @@ class EmailReport(object):
 
                 url = 'http://{0}:5001/deleteuploadedfiles/'.format(CafyLog.debug_server)
                 self.log.info("Calling registration delete upload file service (url:%s)" % url)
-                response = requests.post(url, json=params, headers=headers)
+                response = requests.post(url, json=params, headers=headers, timeout=300)
                 if response.status_code == 200:
                     self.log.info("Topology and input files deleted from registration server")
                 else:

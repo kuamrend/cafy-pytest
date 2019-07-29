@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+import pytest
+import _pytest.main
+import sys
+
+# Customize messages for pytest exit codes
+msg = {_pytest.main.EXIT_OK: 'OK',
+       _pytest.main.EXIT_TESTSFAILED: 'Tests failed',
+       _pytest.main.EXIT_INTERRUPTED: 'Interrupted',
+       _pytest.main.EXIT_INTERNALERROR: 'Internal error',
+       _pytest.main.EXIT_USAGEERROR: 'Usage error',
+       _pytest.main.EXIT_NOTESTSCOLLECTED: 'No tests collected'}
+
+exitcode = pytest.main(sys.argv[1:])
+
+
+
+
+print(msg[exitcode])
+sys.exit(exitcode)
+

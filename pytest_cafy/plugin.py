@@ -1054,6 +1054,9 @@ class EmailReport(object):
                     return
                 failures = json.loads(analyzer_status.get('failures',[]))
                 if len(failures):
+                    if report.outcome != 'failed':
+                        self.log.info("Invoking collector for analyzer failures")
+                        self._call_collector_on_analyzer_based_failure(item)
                     self.log.error('Test case failed due to crash/traceback {}'.format(pformat(failures)))
                     test_outcome = 'failed'
                     report = TestReport(
@@ -1067,6 +1070,42 @@ class EmailReport(object):
                         report.duration,
                     )
                     outcome.force_result(report)
+
+    def _get_test_details(self, node):
+        inherited_classes = []
+        base_classes = inspect.getmro(node.cls)
+        for base_class in base_classes:
+            if base_class.__name__ not in ["ApBase", "object"]:
+                inherited_classes.append(base_class.__name__)
+        index = 1
+        if len(base_classes) == 3:
+            index = 0
+        base_class_name = base_classes[index].__name__
+        testcase_name = node.name
+        return (testcase_name, base_class_name, inherited_classes)
+
+    def _call_collector_on_analyzer_based_failure(self, node):
+
+        testcase_name, base_class_name, inherited_classes = self._get_test_details(node)
+        failed_attr = list()
+        exception_name = "AnalyzerError"
+        collector_exception_name_list = [exception_name]
+        collector_actual_obj_dict_list = [None]
+        collector_actual_obj_name_list = [None]
+        collector_failed_attribute_list = [failed_attr]
+
+        headers = {'content-type': 'application/json'}
+        params = {"testcase_name": testcase_name, "class_name": base_class_name,
+                  "inherited_classes": inherited_classes,
+                  "reg_dict": self.reg_dict, "actual_obj_name": collector_actual_obj_name_list,
+                  "actual_obj_dict": collector_actual_obj_dict_list,
+                  "failed_attr": collector_failed_attribute_list,
+                  "debug_server_name": CafyLog.debug_server,
+                  "exception_name": collector_exception_name_list}
+        response = self.invoke_reg_on_failed_testcase(params, headers)
+        if response is not None and response.status_code == 200:
+            if response.text:
+                self.log.info("Debug Collector logs: %s" % response.text)
 
 
     def check_call_report(self, item, nextitem):
@@ -1123,23 +1162,9 @@ class EmailReport(object):
                             testcase_name = node.name
                             inherited_classes = []
                             if node.cls:
-                                class_name = node.cls
-                                base_classes = inspect.getmro(class_name)
-                                for base_class in base_classes:
-                                    if base_class.__name__ not in ["ApBase", "object"]:
-                                        inherited_classes.append(base_class.__name__)
-                                index = 1
-                                if len(base_classes) == 3:
-                                    index = 0
-                                base_class_name = base_classes[index].__name__
-
-                                #base_class_name = base_classes[1].__name__
+                                testcase_name, base_class_name, inherited_classes = self._get_test_details(node)
                             else:
                                 base_class_name = None
-                            if "reg_id" in self.reg_dict:
-                                reg_id = self.reg_dict["reg_id"]
-                            else:
-                                reg_id = '00'
 
                             exception_type = call.excinfo.type
                             try:

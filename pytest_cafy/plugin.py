@@ -43,7 +43,7 @@ from topology.topo_mgr.topo_mgr import Topology
 from utils.cafyexception  import CafyException
 from debug import DebugLibrary
 
-from wrapt_timeout_decorator import timeout
+from wrapt_timeout_decorator import timeout as wrapt_timeout
 
 #Check with CAFYKIT_HOME or GIT_REPO or CAFYAP_REPO environment is set,
 #if all are set, CAFYAP_REPO takes precedence
@@ -1368,7 +1368,7 @@ class EmailReport(object):
                     copyfile(_junitxml_filename, junitxml_file_path)
                     os.chmod(junitxml_file_path, 0o775)
 
-        @timeout(600)
+        @wrapt_timeout(600)
         def terminal_summary_timeout(terminalreporter, *args):
             try:
                 temp_list = []

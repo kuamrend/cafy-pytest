@@ -1048,28 +1048,32 @@ class EmailReport(object):
             if self.reg_dict:
                 reg_id = self.reg_dict.get('reg_id')
                 test_class = report.nodeid.split('::')[1]
-                if (test_class not in self.analyzer_testcase.keys()) or self.analyzer_testcase.get(test_class) == 1:
-                    analyzer_status = self.post_testcase_status(reg_id, testcase_name, CafyLog.debug_server)
-                    self.log.info('Analyzer Status is {}'.format(analyzer_status))
-                else:
-                    self.log.info('Analyzer is not invoked as testcase failed in setup')
-                if isinstance(analyzer_status, bool):
-                    return
-                failures = json.loads(analyzer_status.get('failures',[]))
-                if len(failures):
-                    self.log.error('Test case failed due to crash/traceback {}'.format(pformat(failures)))
-                    test_outcome = 'failed'
-                    report = TestReport(
-                        report.nodeid,
-                        report.location,
-                        report.keywords,
-                        test_outcome,
-                        report.longrepr,
-                        report.when,
-                        report.sections,
-                        report.duration,
-                    )
-                    outcome.force_result(report)
+                analyzer_status = False
+                try:
+                    if (test_class not in self.analyzer_testcase.keys()) or self.analyzer_testcase.get(test_class) == 1:
+                        analyzer_status = self.post_testcase_status(reg_id, testcase_name, CafyLog.debug_server)
+                        self.log.info('Analyzer Status is {}'.format(analyzer_status))
+                    else:
+                        self.log.info('Analyzer is not invoked as testcase failed in setup')
+                    if isinstance(analyzer_status, bool):
+                       return
+                    failures = json.loads(analyzer_status.get('failures',[]))
+                    if len(failures):
+                        self.log.error('Test case failed due to crash/traceback {}'.format(pformat(failures)))
+                        test_outcome = 'failed'
+                        report = TestReport(
+                            report.nodeid,
+                            report.location,
+                            report.keywords,
+                            test_outcome,
+                            report.longrepr,
+                            report.when,
+                            report.sections,
+                            report.duration,
+                        )
+                        outcome.force_result(report)
+                except:
+                    self.log.error('Error while handling analyzer status')
 
 
     def check_call_report(self, item, nextitem):

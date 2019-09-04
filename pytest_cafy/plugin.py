@@ -1111,7 +1111,7 @@ class EmailReport(object):
                                 test_method.add_marker(pytest.mark.skipif("True"))
                 break
 
-        def request_retry(self, url, method, *args, **kwargs):
+    def request_retry(self, url, method, **kwargs):
         """
         Retry Connection to database.
         Args:
@@ -1126,7 +1126,7 @@ class EmailReport(object):
         sessn = requests.Session()
         sessn.mount('https://', HTTPAdapter(max_retries=retries))
         kwargs['headers'] = HEADERS
-        response = sessn.request(method=method, url=url, timeout=30, *args, **kwargs)
+        response = sessn.request(method=method, url=url, timeout=30, **kwargs)
         if response.status_code == 200:
             result = json.loads(s=response.text, object_pairs_hook=OrderedDict)
             return result
@@ -1147,9 +1147,9 @@ class EmailReport(object):
         method = 'GET'
         return self.request_retry(url, method)
 
-    def set_run_status(self, method='PUT', status='I'):
+    def set_run_status(self, method='PUT', **kwargs):
         url = '/api/update/run-state'
-        return self.request_retry(url, method, status)
+        return self.request_retry(url, method, **kwargs)
 
     def pytest_runtest_protocol(self, item, nextitem):
         # add to the hook
@@ -1173,7 +1173,9 @@ class EmailReport(object):
             else:
                 method = 'PUT'
                 status = 'I'
-                self.set_run_status(method, status)
+                kwargs = {}
+                kwargs['status'] = status
+                self.set_run_status(method, **kwargs)
                 msg = 'Waited for max time:{} to resume, so finally exiting now'.format(expiration_time - start_time)
                 pytest.exit(msg)
 

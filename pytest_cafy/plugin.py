@@ -1140,7 +1140,7 @@ class EmailReport(object):
 
     def get_run_status(self):
         """
-        This method is used to get the status of run (either P or R)
+        This method is used to get the status of run.
         :return:
         """
         url = '/api/report/paused-run'
@@ -1176,8 +1176,8 @@ class EmailReport(object):
                 kwargs = {}
                 kwargs['status'] = status
                 self.set_run_status(method, **kwargs)
-                msg = 'Waited for max time:{} to resume, so finally exiting now'.format(expiration_time - start_time)
-                pytest.exit(msg)
+                msg = 'Waited for max time:{} to resume, so finally resuming now'.format(expiration_time - start_time)
+                self.log.info(msg)
 
         item.ihook.pytest_runtest_logstart(
             nodeid=item.nodeid, location=item.location,

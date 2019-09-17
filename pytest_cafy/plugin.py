@@ -19,6 +19,7 @@ import json
 import inspect
 import yaml
 import pytest
+import traceback
 
 from _pytest.terminal import TerminalReporter
 from _pytest.runner import runtestprotocol, TestReport
@@ -41,6 +42,8 @@ from logger.cafylog import CafyLog
 from topology.topo_mgr.topo_mgr import Topology
 from utils.cafyexception  import CafyException
 from debug import DebugLibrary
+
+from wrapt_timeout_decorator import timeout as wrapt_timeout
 
 #Check with CAFYKIT_HOME or GIT_REPO or CAFYAP_REPO environment is set,
 #if all are set, CAFYAP_REPO takes precedence
@@ -676,7 +679,7 @@ class EmailReport(object):
         msg['To'] = mail_to
         msg.add_header('Content-Type', 'text/html')
         # fixme: add an option to read config from file rather then CLI
-        with smtplib.SMTP(self.smtp_server, self.smtp_port) as mail_server:
+        with smtplib.SMTP(self.smtp_server, self.smtp_port,timeout=60) as mail_server:
             if self.email_from_passwd:
                 mail_server.ehlo()
                 mail_server.starttls()
@@ -1045,31 +1048,36 @@ class EmailReport(object):
             if self.reg_dict:
                 reg_id = self.reg_dict.get('reg_id')
                 test_class = report.nodeid.split('::')[1]
-                if (test_class not in self.analyzer_testcase.keys()) or self.analyzer_testcase.get(test_class) == 1:
-                    analyzer_status = self.post_testcase_status(reg_id, testcase_name, CafyLog.debug_server)
-                    self.log.info('Analyzer Status is {}'.format(analyzer_status))
-                else:
-                    self.log.info('Analyzer is not invoked as testcase failed in setup')
-                if isinstance(analyzer_status, bool):
-                    return
-                failures = json.loads(analyzer_status.get('failures',[]))
-                if len(failures):
-                    if report.outcome != 'failed':
-                        self.log.info("Invoking collector for analyzer failures")
-                        self._call_collector_on_analyzer_based_failure(item)
-                    self.log.error('Test case failed due to crash/traceback {}'.format(pformat(failures)))
-                    test_outcome = 'failed'
-                    report = TestReport(
-                        report.nodeid,
-                        report.location,
-                        report.keywords,
-                        test_outcome,
-                        report.longrepr,
-                        report.when,
-                        report.sections,
-                        report.duration,
-                    )
-                    outcome.force_result(report)
+
+                analyzer_status = False
+                try:
+                    if (test_class not in self.analyzer_testcase.keys()) or self.analyzer_testcase.get(test_class) == 1:
+                        analyzer_status = self.post_testcase_status(reg_id, testcase_name, CafyLog.debug_server)
+                        self.log.info('Analyzer Status is {}'.format(analyzer_status))
+                    else:
+                        self.log.info('Analyzer is not invoked as testcase failed in setup')
+                    if isinstance(analyzer_status, bool):
+                        return
+                    failures = json.loads(analyzer_status.get('failures',[]))
+                    if len(failures):
+                        if report.outcome != 'failed':
+                            self.log.info("Invoking collector for analyzer failures")
+                            self._call_collector_on_analyzer_based_failure(item)
+                        self.log.error('Test case failed due to crash/traceback {}'.format(pformat(failures)))
+                        test_outcome = 'failed'
+                        report = TestReport(
+                            report.nodeid,
+                            report.location,
+                            report.keywords,
+                            test_outcome,
+                            report.longrepr,
+                            report.when,
+                            report.sections,
+                            report.duration,
+                        )
+                        outcome.force_result(report)
+                except:
+                    self.log.error('Error while handling analyzer status')
 
     def _get_test_details(self, node):
         inherited_classes = []
@@ -1390,18 +1398,29 @@ class EmailReport(object):
                     copyfile(_junitxml_filename, junitxml_file_path)
                     os.chmod(junitxml_file_path, 0o775)
 
-        temp_list = []
-        terminalreporter.write_line("\n TestCase Summary Status Table")
-        for k,v in self.testcase_dict.items():
-            temp_list.append((k,v))
-        print (tabulate(temp_list, headers=['Testcase_name', 'Status'], tablefmt='grid'))
-        if not self.no_email:
-            try: 
-                self._sendemail()
-            except Exception as err: 
-                self.log.error("Error when sending email: {err}".format(err=str(err)))
-
-
+        @wrapt_timeout(600)
+        def terminal_summary_timeout(terminalreporter, *args):
+            try:
+                temp_list = []
+                terminalreporter.write_line("\n TestCase Summary Status Table")
+                for k,v in self.testcase_dict.items():
+                    temp_list.append((k,v))
+                self.log.info("Printing the tabulated summary table")
+                print (tabulate(temp_list, headers=['Testcase_name', 'Status'], tablefmt='grid'))
+                self.log.info("Preparing to send email")
+                if not self.no_email:
+                    try: 
+                        self._sendemail()
+                    except Exception as err: 
+                        self.log.error("Error when sending email: {err}".format(err=str(err)))
+            except TimeoutError as err:
+                trace = traceback.format_exc()
+                print(trace)
+                self.log.error("Encountered timeout of 600s in pytest_terminal_summary()")
+                raise err
+                
+        
+        terminal_summary_timeout(terminalreporter)
         #Unset environ variables cafykit_mongo_learn & cafykit_mongo_read if set
         if os.environ.get('cafykit_mongo_learn'):
             del os.environ['cafykit_mongo_learn']

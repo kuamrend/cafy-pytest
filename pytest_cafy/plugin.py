@@ -1482,6 +1482,7 @@ class EmailReport(object):
 
     def _get_analyzer_log(self):
         params = {"reg_id": CafyLog.registration_id,
+                  "email_addr_list": self.email_addr_list,
                   "debug_server_name": CafyLog.debug_server}
         url = 'http://{0}:5001/get_analyzer_log/'.format(CafyLog.debug_server)
         try:

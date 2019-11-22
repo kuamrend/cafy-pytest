@@ -966,9 +966,9 @@ class EmailReport(object):
                                 item['fail_log'] = CafyLog.fail_log_msg
                     url = '{0}/api/runs/{1}/cases'.format(os.environ.get('CAFY_API_HOST'),
                                                                  os.environ.get('CAFY_RUN_ID'))
-                    self.log.info("url: {}".format(url))
-                    self.log.info("Calling API service for live logging of executed testcases ")
-                    self.log.info("json = {0}".format(CafyLog.collected_testcases))
+                    #self.log.info("url: {}".format(url))
+                    #self.log.info("Calling API service for live logging of executed testcases ")
+                    #self.log.info("json = {0}".format(CafyLog.collected_testcases))
                     response = requests.post(url, json=CafyLog.collected_testcases, headers=headers)
                     if response.status_code == 200:
                         self.log.info("Calling API service for live logging of executed testcase successful")

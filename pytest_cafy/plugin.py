@@ -31,7 +31,7 @@ from pprint import pprint, pformat
 from shutil import copyfile
 from configparser import ConfigParser
 from datetime import datetime
-from collections import namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict, defaultdict
 
 from email.utils import COMMASPACE
 from email.mime.text import MIMEText
@@ -661,6 +661,8 @@ class EmailReport(object):
 
         # Testcase name and its status dict
         self.testcase_dict = OrderedDict()
+        self.testcase_time = defaultdict(
+            lambda : {'start_time': None, 'end_time': None})
         self.testcase_failtrace_dict = OrderedDict()
 
     def _sendemail(self):
@@ -886,6 +888,7 @@ class EmailReport(object):
         if report.when == 'setup':
             self.log.set_testcase(testcase_name)
             self.log.title("Start test:  %s" %(testcase_name))
+            self.testcase_time[testcase_name]['start_time'] = datetime.utcnow()
             #Notify testcase_name to handshake server
             #If config.debug_enable is False, the reg_dict is empty, So u want to skip talking to handshake server
             if self.reg_dict:
@@ -957,13 +960,15 @@ class EmailReport(object):
                     for item in CafyLog.collected_testcases:
                         if testcase_name in item.values():
                             item['status'] = self.testcase_dict[testcase_name]
+                            item['start_time'] = self.testcase_time[testcase_name]['start_time']
+                            item['end_time'] = self.testcase_time[testcase_name]['end_time']
                             if testcase_name in self.testcase_failtrace_dict:
                                 item['fail_log'] = CafyLog.fail_log_msg
                     url = '{0}/api/runs/{1}/cases'.format(os.environ.get('CAFY_API_HOST'),
                                                                  os.environ.get('CAFY_RUN_ID'))
-                    self.log.info("url: {}".format(url))
-                    self.log.info("Calling API service for live logging of executed testcases ")
-                    self.log.info("json = {0}".format(CafyLog.collected_testcases))
+                    #self.log.info("url: {}".format(url))
+                    #self.log.info("Calling API service for live logging of executed testcases ")
+                    #self.log.info("json = {0}".format(CafyLog.collected_testcases))
                     response = requests.post(url, json=CafyLog.collected_testcases, headers=headers)
                     if response.status_code == 200:
                         self.log.info("Calling API service for live logging of executed testcase successful")
@@ -994,6 +999,7 @@ class EmailReport(object):
                 #report.when=call stage
                 testcase_name = self.get_test_name(report.nodeid)
                 self.testcase_dict[testcase_name] = 'skipped'
+            self.testcase_time[testcase_name]['end_time'] = datetime.utcnow()
             '''
             if report.longrepr:
                 self.testcase_failtrace_dict[testcase_name] = report.longrepr
@@ -1011,6 +1017,7 @@ class EmailReport(object):
                     testcase_status = report.outcome
 
                 self.testcase_dict[testcase_name] = testcase_status
+                self.testcase_time[testcase_name]['end_time'] = datetime.utcnow()
                 if testcase_status == 'failed':
                     self.testcase_failtrace_dict[testcase_name] = CafyLog.fail_log_msg
                     #print('failmsg = ', self.testcase_failtrace_dict[testcase_name])
@@ -1024,6 +1031,7 @@ class EmailReport(object):
             else:
                 testcase_status = report.outcome
                 self.testcase_dict[testcase_name] = testcase_status
+                self.testcase_time[testcase_name]['end_time'] = datetime.utcnow()
                 if testcase_status == 'failed':
                     if report.longrepr:
                         self.testcase_failtrace_dict[testcase_name] = report.longrepr
@@ -1035,6 +1043,7 @@ class EmailReport(object):
             if report.when == 'setup' and report.outcome == 'failed':
                 testcase_name = self.get_test_name(report.nodeid)
                 self.testcase_dict[testcase_name] = 'error'
+                self.testcase_time[testcase_name]['end_time'] = datetime.utcnow()
         except Exception as e:
             self.log.error("Error getting the testcase status for setup failure: {}".format(e))
 

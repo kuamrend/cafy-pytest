@@ -960,8 +960,8 @@ class EmailReport(object):
                     for item in CafyLog.collected_testcases:
                         if testcase_name in item.values():
                             item['status'] = self.testcase_dict[testcase_name]
-                            item['start_time'] = self.testcase_time[testcase_name]['start_time']
-                            item['end_time'] = self.testcase_time[testcase_name]['end_time']
+                            item['start_time'] = self.testcase_time[testcase_name]['start_time'].isoformat()
+                            item['end_time'] = self.testcase_time[testcase_name]['end_time'].isoformat()
                             if testcase_name in self.testcase_failtrace_dict:
                                 item['fail_log'] = CafyLog.fail_log_msg
                     url = '{0}/api/runs/{1}/cases'.format(os.environ.get('CAFY_API_HOST'),

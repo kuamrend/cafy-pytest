@@ -121,6 +121,8 @@ def pytest_addoption(parser):
                     help='smtp server port e.g 25')
     group.addoption('--no-email', dest='no_email', action='store_true',
                     help='if specified no email will be sent')
+    group.addoption('--mail-if-fail', dest='mail_if_fail', action='store_true',
+                    help='if specified, email will be sent only total testcase = passed testcases')
 
     group = parser.getgroup('Work Dir Path')
     group.addoption('--work-dir', dest="workdir", metavar="DIR", default=None,
@@ -1666,6 +1668,8 @@ class CafyReportData(object):
         self.xpassed = len(xpassed_list)
         self.xfailed = len(xfailed_list)
         self.total = self.passed + self.failed + self.skipped + self.xpassed + self.xfailed
+        if self.terminalreporter.config.option.mail_if_fail is True and self.total == self.passed and self.total != 0:
+            self.terminalreporter.config._email.no_email = True
         # testcase summary result
         self.testcase_name = testcase_dict.keys()
         if CafyLog.htmlfile_link:

@@ -925,6 +925,8 @@ class EmailReport(object):
                 if status != "passed" :
                     temp_json['error'] = CafyLog.fail_log_msg
                     temp_json["exception"] = self.log.exception_details
+                    temp_json["analyzer_exceptions"] = self.log.analyzer_exceptions
+                    self.log.analyzer_exceptions = None
                 self.log.buffer_to_retest.append(temp_json)
             except Exception as err:
                 self.log.info("Error {} happened while getting deta for retest" .format(err))
@@ -1059,7 +1061,6 @@ class EmailReport(object):
             if self.reg_dict:
                 reg_id = self.reg_dict.get('reg_id')
                 test_class = report.nodeid.split('::')[1]
-
                 analyzer_status = False
                 try:
                     if (test_class not in self.analyzer_testcase.keys()) or self.analyzer_testcase.get(test_class) == 1:
@@ -1071,10 +1072,14 @@ class EmailReport(object):
                         return
                     failures = json.loads(analyzer_status.get('failures',[]))
                     if len(failures):
+                        self.log.analyzer_exceptions = failures
+                        errmsg = 'Test case failed due to crash/traceback {}'.format(pformat(failures))
+                        if CafyLog.fail_log_msg == None:
+                            CafyLog.fail_log_msg = errmsg
                         if report.outcome != 'failed':
                             self.log.info("Invoking collector for analyzer failures")
                             self._call_collector_on_analyzer_based_failure(item)
-                        self.log.error('Test case failed due to crash/traceback {}'.format(pformat(failures)))
+                        self.log.error(errmsg)
                         test_outcome = 'failed'
                         report = TestReport(
                             report.nodeid,
@@ -1563,7 +1568,7 @@ class EmailReport(object):
                 self.log.info("Error in uploading collector logfile")
             try:
                 with open(os.path.join(CafyLog.work_dir, "retest_data.json"), "w") as f:
-                    f.write(json.dumps(self.log.buffer_to_retest))
+                    f.write(json.dumps(self.log.buffer_to_retest, indent=4))
             except Exception as error:
                 self.log.info(error)
         '''

@@ -1382,7 +1382,7 @@ class EmailReport(object):
             self.log.info("debug_server name not provided in topo file")
         else:
             try:
-                url = "http://{0}:5003/startrootcause/".format(CafyLog.debug_server)
+                url = "http://{0}:5001/startrootcause/".format(CafyLog.debug_server)
                 self.log.info("Calling RC engine to start rootcause (url:%s)" % url)
                 response = requests.post(url, json=params, headers=headers, timeout=300)
                 if response.status_code == 200:

@@ -919,8 +919,8 @@ class EmailReport(object):
             if not analyzer_status:
                 self.log.info("Analyzer still working, Continuing Test case")
         except Exception as err:
-            self.log.error("Exception hit while checking analyzer status {}".format(repr(err)))
-            self.log.error("Analysis Failed exiting check")
+            self.log.info("Exception hit while checking analyzer status {}".format(repr(err)))
+            self.log.info("Analysis Failed exiting check")
             analyzer_status = False
 
         return analyzer_status
@@ -936,11 +936,11 @@ class EmailReport(object):
                 if response.status_code == 200:
                     return response.json()['analyzer_status']
                 else:
-                    self.log.error("Analyzer status check failed %d" % response.status_code)
+                    self.log.info("Analyzer status check failed %d" % response.status_code)
                     raise CafyException.CafyBaseException("Analyzer is failing")
             except Exception as e:
-                self.log.error("Http call to registration service url:%s is not successful" % url)
-                self.log.error("Error {}".format(e))
+                self.log.info("Http call to registration service url:%s is not successful" % url)
+                self.log.info("Error {}".format(e))
                 raise CafyException.CafyBaseException("Analyzer is failing")
 
 

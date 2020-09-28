@@ -258,7 +258,6 @@ def _requests_retry( url, method, data=None, files=None,  headers=None, timeout=
             if data:
                 kwargs['data'] = data
             if headers:
-                print("**********")
                 kwargs['headers'] = headers
             if timeout:
                 kwargs['timeout']  = timeout

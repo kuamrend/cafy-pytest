@@ -263,12 +263,10 @@ def _requests_retry( url, method, data=None, files=None,  headers=None, timeout=
             if timeout:
                 kwargs['timeout']  = timeout
             response = s.request(method=method, url=url, **kwargs)
-            print("------------------")
             print(response.status_code)
-            print(**kwargs)
+
             
         if response.status_code != 200:
-            print("=====")
             print("HTTP Status Code: {0}\n{1}"
                               .format(response.status_code, response.text))
     except requests.exceptions.RetryError as e:
@@ -866,7 +864,7 @@ class EmailReport(object):
                 else:
                     self.log.error("Analyzer failed %d" % response.status_code)
                     return False
-            except Exception as e::
+            except Exception as e:
                 self.log.error("Http call to registration service url:%s is not successful" % url)
                 self.log.error("Error {}".format(e))
                 return False

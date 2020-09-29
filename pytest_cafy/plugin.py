@@ -1431,7 +1431,7 @@ class EmailReport(object):
                 self.log.info("Calling registration service (url:%s) to start collecting" % url)
                 response = _requests_retry(url, 'POST', json=params, headers=headers, timeout=1500)
                 if response.status_code == 200:
-                    return res
+                    return response
                 else:
                     self.log.error("start_debug part of handshake server returned code %d" % response.status_code)
                     return None

@@ -40,6 +40,9 @@ from email.utils import COMMASPACE
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from jinja2 import Template
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
 
 from logger.cafylog import CafyLog
 from topology.topo_mgr.topo_mgr import Topology
@@ -47,6 +50,7 @@ from utils.cafyexception  import CafyException
 from debug import DebugLibrary
 
 from wrapt_timeout_decorator import timeout as wrapt_timeout
+
 
 #Check with CAFYKIT_HOME or GIT_REPO or CAFYAP_REPO environment is set,
 #if all are set, CAFYAP_REPO takes precedence
@@ -1217,8 +1221,90 @@ class EmailReport(object):
                                 test_method.add_marker(pytest.mark.skipif("True"))
                 break
 
+    def request_retry(self, url, method, **kwargs):
+        """
+        Retry Connection to database.
+        Args:
+            url: String of URL of Cafy API.
+            method: String of 'GET', 'POST', 'PUT' or 'DELETE'.
+            **kwargs: Other Response arguments
+        :return:
+        """
+        HEADERS = {
+            'content-type': "application/json",
+            'authorization': "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwYXNzd29y"
+                             "ZCI6Il9fd2VsbF9kb25lX2NhZnlfXyIsInVzZXJuYW1lIjoiX19jYWZ5"
+                             "X3JvYm90X18ifQ.DQ1uVZeZG9mgmz7RMKaBebZcTIOVCvuzCYHjSrZHd"
+                             "lI",
+        }
+
+        retries = Retry(total=5,
+                        backoff_factor=1,
+                        status_forcelist=[500, 502, 503, 504])
+        api_host = os.environ.get('CAFY_API_HOST')
+        url = "{}{}".format(api_host, url)
+        sessn = requests.Session()
+        sessn.mount('https://', HTTPAdapter(max_retries=retries))
+        sessn.mount('http://', HTTPAdapter(max_retries=retries))
+        kwargs['headers'] = HEADERS
+        data = kwargs.get('data')
+        kwargs.pop('data', "")
+        response = sessn.request(method=method, url=url, timeout=30, json=data, **kwargs)
+        if response.status_code == 200:
+            result = json.loads(s=response.text, object_pairs_hook=OrderedDict)
+            return result
+        else:
+            message = (f"An error occurred while trying to call API: {url}.\n\n"
+                       f"Status code: {response.status_code}\n\n"
+                       f"Content:\n{response.content}\n\n"
+                       f"Text response:\n{response.text}\n\n")
+            self.log.info(message)
+            # pytest.exit(message)
+
+    def get_run_status(self):
+        """
+        This method is used to get the status of run.
+        :return:
+        """
+        run_id = os.environ.get('CAFY_RUN_ID')
+        url = f'/api/report/paused-run?run_id={run_id}'
+        method = 'GET'
+        return self.request_retry(url, method)
+
+    def set_run_status(self, method='PUT', **kwargs):
+        run_id = kwargs.get('run_id')
+        url = f'/api/update/run-state?run_id={run_id}'
+        return self.request_retry(url, method, **kwargs)
+
     def pytest_runtest_protocol(self, item, nextitem):
         # add to the hook
+        data = self.get_run_status().get('data')
+        waiting_interval = 30
+        current_time = datetime.utcnow()
+        start_time = datetime.utcnow()
+        if data.get('status') == 'P':
+            expiration_time = datetime.strptime(data.get('expiration_time'), '%Y-%m-%dT%H:%M:%S%z')
+            while current_time < expiration_time:
+                self.log.info(f'Sleeping for {waiting_interval} secs')
+                time.sleep(waiting_interval)
+                data = self.get_run_status().get('data')
+                expiration_time = datetime.strptime(data('expiration_time'), '%Y-%m-%dT%H:%M:%S%z')
+                if data['status'] == 'I':
+                    self.log.info('Run is resumed, waited for {} !!'.format(str(datetime.now() - start_time)))
+                    break
+                current_time = datetime.utcnow()
+            else:
+                method = 'PUT'
+                payload = {
+                    'status': 'I',
+                    'reason': 'Time limit exceeded',
+                    'run_id': os.environ.get('CAFY_RUN_ID')
+                }
+                self.set_run_status(method, data=payload)
+                msg = 'Waited for max time:{} to resume, so finally resuming now'.format(expiration_time - start_time)
+                self.log.info(msg)
+                # pytest.exit(msg)
+
         item.ihook.pytest_runtest_logstart(
             nodeid=item.nodeid, location=item.location,
         )

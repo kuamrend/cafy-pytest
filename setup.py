@@ -20,6 +20,7 @@ setup(
     url='https://github.com/kuamrend/cafy-pytest',
     description='Pytest Cafy Plugin', 	
     install_requires=['pytest>=2.3', 'jinja2'],
+    scripts=['bin/cafyrun'],
     # the following makes a plugin available to pytest
     entry_points={
         'pytest11': ['pytest_cafy = pytest_cafy.plugin']

@@ -600,16 +600,16 @@ def pytest_collection_modifyitems(session, config, items):
             content = [x.split(',')[0] for x in content]
             module_name =  [x.split('::')[0] for x in content]
             selected_nodeids = [x.split('::',1)[-1] for x in content]
-            #Keeping the code commented out incase we need to maintain backward compatibility later.
-            #module_name = [os.path.relpath(x, str(config.rootdir)) for x in module_name]
-            #sequence = list(zip(module_name, selected_nodeids ))
-            #selected_nodeids = ['::'.join(tup) for tup in sequence]
-            # remove whitespace characters like `\n` at the end of each line
-            selected_nodeids = ['::'+ x for x in selected_nodeids]
+            if items and not items[0].nodeid.startswith("::"):
+                module_name = [os.path.relpath(x, str(config.rootdir)) for x in module_name]
+                sequence = list(zip(module_name, selected_nodeids ))
+                selected_nodeids = ['::'.join(tup) for tup in sequence]
+                nodeid_pattern = re.compile(r'((?:[\w-]+\/)*[\w-]+\.[\w-]*\:\:[\w-]+\:?\:?\(?\)?\:?\:?[\w-]*)(\[[\w-]+\])?')
+            else:
+                selected_nodeids = ['::'+ x for x in selected_nodeids]
+                nodeid_pattern = re.compile(r'(\:\:[\w-]+\:?\:?\(?\)?\:?\:?[\w-]*)(\[[\w-]+\])?')
             selected_nodeids = [x.rstrip('\n') for x in selected_nodeids]
         #Modify the items list by picking only those whose nodeid exists in selected_nodeids
-        #nodeid_pattern = re.compile(r'((?:[\w-]+\/)*[\w-]+\.[\w-]*\:\:[\w-]+\:?\:?\(?\)?\:?\:?[\w-]*)(\[[\w-]+\])?')
-        nodeid_pattern = re.compile(r'(\:\:[\w-]+\:?\:?\(?\)?\:?\:?[\w-]*)(\[[\w-]+\])?')
         try:
             items[:] = [item for item in items if nodeid_pattern.match(item.nodeid).group(1) in selected_nodeids]
         except:

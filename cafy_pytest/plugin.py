@@ -50,6 +50,8 @@ from utils.cafyexception  import CafyException
 from debug import DebugLibrary
 import pluggy
 import _pytest
+import allure_commons
+from allure_commons.reporter import AllureReporter
 
 #Check with CAFYKIT_HOME or GIT_REPO or CAFYAP_REPO environment is set,
 #if all are set, CAFYAP_REPO takes precedence
@@ -925,6 +927,15 @@ class EmailReport(object):
             reg_id = self.reg_dict['reg_id']
             debug_server = CafyLog.debug_server
             self.initiate_analyzer(reg_id, test_case, debug_server)
+   
+    """
+    #@pytest.hookimpl(trylast=True, hookwrapper=True)
+    def pytest_runtest_call(self, item):
+        uuid = item.nodeid
+        print ("uuid = ", uuid)
+        test_result = AllureReporter().get_test(uuid)
+        import pdb;pdb.set_trace()
+    """
 
     def pytest_runtest_teardown(self, item, nextitem):
         if nextitem is None:
@@ -1207,7 +1218,6 @@ class EmailReport(object):
                     else:
                         self.testcase_failtrace_dict[testcase_name] = None
 
-
     def check_call_report(self, item, nextitem):
         """
         If test method in a testclass fails then mark the rest of the test methods
@@ -1238,6 +1248,7 @@ class EmailReport(object):
             nodeid=item.nodeid, location=item.location,
         )
         self.check_call_report(item, nextitem)
+        #setattr(item.function, "__doc__", CafyLog.feature_lib_mode)
         return True
 
     def pytest_exception_interact(self, node, call, report):
